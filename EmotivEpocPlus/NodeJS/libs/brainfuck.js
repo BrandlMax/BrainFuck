@@ -23,6 +23,7 @@ class BrainFuck extends EventEmitter {
         this.CORTEX_URL = "wss://emotivcortex.com:54321";
         this.WS;
         this.TOKEN;
+        this.SESSION = null;
 
         this.BRAIN = {
             command: null,
@@ -31,21 +32,25 @@ class BrainFuck extends EventEmitter {
             lowerFaceAction: null,
         }
 
+        // BINDING
+        this.createSession = this.createSession.bind(this);
+        this.Subscribe = this.Subscribe.bind(this);
+
         // EVENTS
         this.on('Authorized', () => {
-            console.log('Authentification', this.TOKEN )
-            this.createSession(this.TOKEN)
+            console.log('Authentification')
+            this.createSession()
         })
 
         this.on('createSession', () => {
+            this.emit('Ready');
             console.log('Session created')
-            this.Subscribe(this.TOKEN)
         })
 
     }
 
     // SETUP
-    Connect(){
+    async Connect(){
         this.WS = new WebSocket(this.CORTEX_URL);
         this.WS.addEventListener("open", this._open.bind(this));
         this.WS.addEventListener("message", this._message.bind(this));
@@ -71,6 +76,7 @@ class BrainFuck extends EventEmitter {
             }
 
             if(msg.result['appId'] !== undefined){
+                this.SESSION = msg.result.id;
                 this.emit('createSession');
             }
 
@@ -105,12 +111,12 @@ class BrainFuck extends EventEmitter {
     }
 
     // Create Session
-    createSession(TOKEN){
+    createSession(){
         let createSessionReq = {
             "jsonrpc": "2.0",
             "method": "createSession",
             "params": {
-            "_auth": TOKEN,
+            "_auth": this.TOKEN,
             "status": "open"
             },
             "id": 1
@@ -119,12 +125,12 @@ class BrainFuck extends EventEmitter {
     }
 
     // Subscribe
-    Subscribe(TOKEN){
+    Subscribe(){
         let SubscribeReq = {
             "jsonrpc": "2.0",
             "method": "subscribe",
             "params": {
-              "_auth": TOKEN,
+              "_auth": this.TOKEN,
               "streams": [
                 "com",
                 "fac",
