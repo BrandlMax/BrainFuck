@@ -24,6 +24,9 @@ class BrainFuck extends EventEmitter {
         this.WS;
         this.TOKEN;
         this.SESSION = null;
+        this.READY = false;
+
+        this.CURTRAINING = null;
 
         this.BRAIN = {
             command: null,
@@ -33,19 +36,36 @@ class BrainFuck extends EventEmitter {
         }
 
         // BINDING
-        this.createSession = this.createSession.bind(this);
-        this.Subscribe = this.Subscribe.bind(this);
+        this._createSession = this._createSession.bind(this);
+        this._subscribe = this._subscribe.bind(this);
+        this._training = this._training.bind(this);
+        this.startTraining = this.startTraining.bind(this);
 
         // EVENTS
         this.on('Authorized', () => {
             console.log('Authentification')
-            this.createSession()
+            this._createSession()
         })
 
-        this.on('createSession', () => {
-            this.emit('Ready');
-            console.log('Session created')
+        this.on('createdSession', () => {
+            console.log('Session created');
+            this._subscribe();
         })
+
+        this.on('subscribed', ()=>{
+            console.log('Subscribed');
+            this.emit('Ready');
+            this.READY = true;
+        })
+
+        // Training
+        this.on('trainingSuccess', () => {
+            this._training(this.CURTRAINING, 'accept')
+        });
+
+        this.on('trainingFailed', () => {
+            console.log(`Training ${this.CURTRAINING } Failed.`)
+        });
 
     }
 
@@ -60,13 +80,13 @@ class BrainFuck extends EventEmitter {
         console.log('open', e);
 
         if(this.TOKEN == null){
-            this._Authorize();
+            this._authorize();
         }
     }
 
     _message(e){
         let msg = safeParse(e.data);
-        console.log('message', msg);
+        // console.log('message', msg);
 
         if(typeof msg.result !== 'undefined' && msg.result !== null){
         
@@ -77,30 +97,49 @@ class BrainFuck extends EventEmitter {
 
             if(msg.result['appId'] !== undefined){
                 this.SESSION = msg.result.id;
-                this.emit('createSession');
+                this.emit('createdSession');
+            } else{
+                console.log(msg.result);
             }
 
         }else{
                 
             if (msg['com'] !== undefined){
-                console.log('com', msg.com)
+                // console.log('com', msg.com)
                 this.BRAIN.command = msg.com[0]
+                if(!this.READY){
+                    this.emit('subscribed');
+                }
             }
 
             if (msg['fac'] !== undefined){
-                console.log('fac', msg.fac)
+                // console.log('fac', msg.fac)
                 this.BRAIN.eyeAction = msg.fac[0]
                 this.BRAIN.upperFaceAction = msg.fac[1]
                 this.BRAIN.lowerFaceAction = msg.fac[3]
             }
 
+            if (msg['sys'] !== undefined){
+                console.log(msg)
+                // console.log('com', msg.com)
+                if (msg['sys'][1] == 'MC_Completed'){
+                    this.emit('trainingSuccess');
+                } else {
+                    this.emit('trainingFailed');
+                }
+            }
+
+            if (msg['error'] !== undefined){
+                console.log(msg['error'])
+            }
+
         }
         
-        console.log(`command: ${ this.BRAIN.command } | eyeAction: ${ this.BRAIN.eyeAction }| upperFaceAction: ${ this.BRAIN.upperFaceAction }| lowerFaceAction: ${ this.BRAIN.lowerFaceAction } `)
+        this.emit('Stream', this.BRAIN);
     }
 
     // ACTIONS
-    _Authorize(){
+    _authorize(){
         let AuthReq = {
             "jsonrpc": "2.0",
             "method": "authorize",
@@ -110,8 +149,9 @@ class BrainFuck extends EventEmitter {
         this.WS.send(JSON.stringify(AuthReq));
     }
 
+
     // Create Session
-    createSession(){
+    _createSession(){
         let createSessionReq = {
             "jsonrpc": "2.0",
             "method": "createSession",
@@ -125,7 +165,7 @@ class BrainFuck extends EventEmitter {
     }
 
     // Subscribe
-    Subscribe(){
+    _subscribe(){
         let SubscribeReq = {
             "jsonrpc": "2.0",
             "method": "subscribe",
@@ -143,16 +183,26 @@ class BrainFuck extends EventEmitter {
     }
 
     // Training
-    SetupProfile(){
-        // Load or Create
+    _training(action, status){
+        this.CURTRAINING = action;
+
+        let trainingReq = {
+            "jsonrpc": "2.0",
+            "method": "training",
+            "params": {
+                "_auth": this.TOKEN,
+                "detection": "mentalCommand",
+                "session": this.SESSION,
+                "action": action,
+                "status": status
+            },
+            "id": 1
+        }
+        this.WS.send(JSON.stringify(trainingReq));
     }
 
-    Training(){
-
-    }
-
-    EndTraining(){
-
+    startTraining(action){
+        this._training(action, 'start');
     }
 }
 
