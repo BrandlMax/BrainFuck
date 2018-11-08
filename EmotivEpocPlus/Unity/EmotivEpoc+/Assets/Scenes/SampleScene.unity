@@ -188,6 +188,7 @@ GameObject:
   m_Component:
   - component: {fileID: 425021461}
   - component: {fileID: 425021460}
+  - component: {fileID: 425021459}
   m_Layer: 0
   m_Name: EPOC
   m_TagString: Untagged
@@ -195,6 +196,17 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &425021459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 425021458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: faaefd1a19d254254b9e3f7c812792e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &425021460
 MonoBehaviour:
   m_ObjectHideFlags: 0
