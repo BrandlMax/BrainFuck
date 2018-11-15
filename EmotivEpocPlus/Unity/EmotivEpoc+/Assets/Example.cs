@@ -3,11 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+
+
 public class Example : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-        EventManager.On("test", SomeOtherFunction);
+    public BrainFuck EPOC;
+
+    // Use this for initialization
+    void Start () {
+
+        EPOC = new BrainFuck();
+        Debug.Log("THIS EPOC" + EPOC);
+
+        EPOC.Connect();
+
+        EPOC.On("Ready", Ready);
+        EPOC.On("Stream", Stream);
 
     }
 	
@@ -21,8 +32,14 @@ public class Example : MonoBehaviour {
 
     }
 
-    void SomeOtherFunction()
+    void Ready()
     {
-        Debug.Log("Some Other Function was called!");
+        Debug.Log("EPOC Ready!");
     }
+
+    void Stream()
+    {
+        Debug.Log("Stream is Running");
+    }
+
 }

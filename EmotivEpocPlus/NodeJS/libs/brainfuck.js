@@ -152,7 +152,7 @@ class BrainFuck extends EventEmitter {
 
     // Create Session
     _createSession(){
-        let createSessionReq = {
+        let CreateSessionReq = {
             "jsonrpc": "2.0",
             "method": "createSession",
             "params": {
@@ -161,7 +161,7 @@ class BrainFuck extends EventEmitter {
             },
             "id": 1
         }
-        this.WS.send(JSON.stringify(createSessionReq));
+        this.WS.send(JSON.stringify(CreateSessionReq));
     }
 
     // Subscribe

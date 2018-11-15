@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 using System;
 using WebSocketSharp;
@@ -15,19 +16,29 @@ public class BrainFuck : MonoBehaviour {
     private string SESSION = null;
     private Boolean READY = false;
 
+    private class RES_CLASS
+    {
+
+    };
+    private RES_CLASS RES = new RES_CLASS();
+
+
     private class BRAIN_CLASS{
         public string command = null;
         public string eyeAction = null;
         public string upperFaceAction = null;
         public string lowerFaceAction = null;
     }
+
     private BRAIN_CLASS BRAIN = new BRAIN_CLASS();
 
-
+    // DELEGATES
+    public delegate void StreamFunction();
 
     // WEBSOCKET
     public void Connect()
     {
+       
         WS = new WebSocket(CORTEX_URL);
 
         WS.OnOpen += _open;
@@ -40,14 +51,21 @@ public class BrainFuck : MonoBehaviour {
 
     private void _open(object sender, System.EventArgs e)
     {
-        Debug.Log("open" + e);
+        Debug.Log("open " + e);
+
+        if(TOKEN == null){
+            _authorize();
+        }
     }
 
     private void _message(object sender, MessageEventArgs e)
     {
         Debug.Log("WebSocket server said: " + e.Data);
-        Thread.Sleep(3000);
-        WS.CloseAsync();
+
+        RES_CLASS msg_obj = safeParse(e.Data);
+        // TODO: JSON PARSING! 
+        Debug.Log("MSGOBJ: " + msg_obj);
+
     }
 
     private void _close(object sender, CloseEventArgs e)
@@ -60,10 +78,51 @@ public class BrainFuck : MonoBehaviour {
         Debug.Log("Message sent successfully? " + success);
     }
 
+    // EVENT MANAGER
+    public void On(string Event, UnityAction Callback)
+    {
+        EventManager.On(Event, Callback);
+    }
+
     // EVENTS
 
 
-    //ACTIONS
+    // ACTION
+    private void _authorize()
+    {
+        string AuthReq = "{\"jsonrpc\": \"2.0\", \"method\": \"authorize\", \"params\": { }, \"id\": 1 }";
+        Debug.Log("AuthReq:" + AuthReq);
+        WS.Send(AuthReq);
+    }
 
 
+    private void _createSession()
+    {
+        string CreateSessionReq = "{\"jsonrpc\": \"2.0\",\"method\": \"createSession\",\"params\": { \"_auth\":" + TOKEN + ",\"status\": \"open\"},\"id\": 1}";
+        Debug.Log("Created:" + CreateSessionReq);
+        WS.Send(CreateSessionReq);
+    }
+
+
+    private void _Subscribe()
+    {
+        string SubscribeReq = "{\"jsonrpc\": \"2.0\",\"method\": \"subscribe\",\"params\": { \"_auth\":" + TOKEN + ",\"streams\": [\"com\",\"fac\",\"sys\"]},\"id\": 1}";
+        Debug.Log("Subscrs:" + SubscribeReq);
+        WS.Send(SubscribeReq);
+    }
+
+
+    // HELPER
+    private RES_CLASS safeParse(string msg)
+    {
+        try
+        {
+            return JsonUtility.FromJson<RES_CLASS>(msg);
+        }
+        catch
+        {
+            Debug.Log("PARSING ERROR! " + msg);
+            return null;
+        }
+    }
 }
