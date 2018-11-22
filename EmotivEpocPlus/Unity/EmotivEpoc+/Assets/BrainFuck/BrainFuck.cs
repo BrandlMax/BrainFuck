@@ -7,7 +7,7 @@ using System;
 using WebSocketSharp;
 using System.Threading;
 
-public class BrainFuck : MonoBehaviour
+public class BrainFuck 
 {
 
     public string CORTEX_URL = "wss://emotivcortex.com:54321";
@@ -49,17 +49,13 @@ public class BrainFuck : MonoBehaviour
             _authorize();
         }
 
+
         // EVENTS
 
         this.On("test", () => {
-            Debug.Log("Why Tough?");
-        });
-
-        this.On("test", () => {
+            Debug.Log("Test Event");
             Test();
         });
-
-        this.On("test", () => Test());
 
         this.On("authorized", () =>
         {
@@ -153,9 +149,9 @@ public class BrainFuck : MonoBehaviour
         EventManager.Emit(Event);
     }
 
-
-    void Test()
+    public void Test()
     {
+
         Debug.Log("TESTILY TEST!");
     }
 

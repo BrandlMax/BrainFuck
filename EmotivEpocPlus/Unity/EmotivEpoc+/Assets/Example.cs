@@ -24,8 +24,9 @@ public class Example : MonoBehaviour
         EPOC.On("Stream", Stream);
 
         EPOC.On("test", () => {
-            //Stream();
-            //Ready();
+            // Stream();
+            // Ready();
+            // EPOC.Test();
         });
     }
 	
