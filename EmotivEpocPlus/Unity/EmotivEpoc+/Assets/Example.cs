@@ -5,12 +5,14 @@ using UnityEngine.Events;
 
 
 
-public class Example : MonoBehaviour {
+public class Example : MonoBehaviour
+{
 
     public BrainFuck EPOC;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
 
         EPOC = new BrainFuck();
         Debug.Log("THIS EPOC" + EPOC);
@@ -18,8 +20,13 @@ public class Example : MonoBehaviour {
         EPOC.Connect();
 
         EPOC.On("Ready", Ready);
+
         EPOC.On("Stream", Stream);
 
+        EPOC.On("test", () => {
+            //Stream();
+            //Ready();
+        });
     }
 	
 	// Update is called once per frame
@@ -27,7 +34,7 @@ public class Example : MonoBehaviour {
 
         if (Input.GetKeyDown("q"))
         {
-            EventManager.Emit("test");
+            EPOC.Emit("test");
         }
 
     }
@@ -41,5 +48,4 @@ public class Example : MonoBehaviour {
     {
         Debug.Log("Stream is Running");
     }
-
 }

@@ -7,8 +7,8 @@ using System;
 using WebSocketSharp;
 using System.Threading;
 
-public class BrainFuck : MonoBehaviour {
-
+public class BrainFuck : MonoBehaviour
+{
 
     public string CORTEX_URL = "wss://emotivcortex.com:54321";
     private WebSocket WS;
@@ -16,14 +16,8 @@ public class BrainFuck : MonoBehaviour {
     private string SESSION = null;
     private Boolean READY = false;
 
-    private class RES_CLASS
+    private class BRAIN_CLASS
     {
-
-    };
-    private RES_CLASS RES = new RES_CLASS();
-
-
-    private class BRAIN_CLASS{
         public string command = null;
         public string eyeAction = null;
         public string upperFaceAction = null;
@@ -32,13 +26,10 @@ public class BrainFuck : MonoBehaviour {
 
     private BRAIN_CLASS BRAIN = new BRAIN_CLASS();
 
-    // DELEGATES
-    public delegate void StreamFunction();
-
     // WEBSOCKET
     public void Connect()
     {
-       
+
         WS = new WebSocket(CORTEX_URL);
 
         WS.OnOpen += _open;
@@ -53,18 +44,63 @@ public class BrainFuck : MonoBehaviour {
     {
         Debug.Log("open " + e);
 
-        if(TOKEN == null){
+        if (TOKEN == null)
+        {
             _authorize();
         }
+
+        // EVENTS
+
+        this.On("test", () => {
+            Debug.Log("Why Tough?");
+        });
+
+        this.On("test", () => {
+            Test();
+        });
+
+        this.On("test", () => Test());
+
+        this.On("authorized", () =>
+        {
+            Debug.Log("Authentification");
+            this._createSession();
+        });
+
+        this.On("createdSession", () =>
+        {
+            Debug.Log("Session created");
+            this._subscribe();
+        });
+
+        this.On("subscribed", () =>
+        {
+            Debug.Log("Subscribed");
+            this.Emit("Ready");
+            READY = true;
+        });
+
     }
 
     private void _message(object sender, MessageEventArgs e)
     {
         Debug.Log("WebSocket server said: " + e.Data);
+        RES_CLASS msg = JsonUtility.FromJson<RES_CLASS>(e.Data.ToString());
 
-        RES_CLASS msg_obj = safeParse(e.Data);
-        // TODO: JSON PARSING! 
-        Debug.Log("MSGOBJ: " + msg_obj);
+        if (msg.result._auth != null)
+        {
+            this.TOKEN = msg.result._auth;
+            Debug.Log("AUTH..." + TOKEN);
+            this.Emit("authorized");
+
+        }
+
+        if (msg.result.appID != null)
+        {
+            Debug.Log("Create Session");
+            this.SESSION = msg.result.id;
+            this.Emit("createdSession");
+        }
 
     }
 
@@ -77,14 +113,6 @@ public class BrainFuck : MonoBehaviour {
     {
         Debug.Log("Message sent successfully? " + success);
     }
-
-    // EVENT MANAGER
-    public void On(string Event, UnityAction Callback)
-    {
-        EventManager.On(Event, Callback);
-    }
-
-    // EVENTS
 
 
     // ACTION
@@ -104,7 +132,7 @@ public class BrainFuck : MonoBehaviour {
     }
 
 
-    private void _Subscribe()
+    private void _subscribe()
     {
         string SubscribeReq = "{\"jsonrpc\": \"2.0\",\"method\": \"subscribe\",\"params\": { \"_auth\":" + TOKEN + ",\"streams\": [\"com\",\"fac\",\"sys\"]},\"id\": 1}";
         Debug.Log("Subscrs:" + SubscribeReq);
@@ -112,17 +140,23 @@ public class BrainFuck : MonoBehaviour {
     }
 
 
-    // HELPER
-    private RES_CLASS safeParse(string msg)
+    // EVENT MANAGER
+    public void On(string Event, UnityAction Callback)
     {
-        try
-        {
-            return JsonUtility.FromJson<RES_CLASS>(msg);
-        }
-        catch
-        {
-            Debug.Log("PARSING ERROR! " + msg);
-            return null;
-        }
+        EventManager.On(Event, Callback);
     }
+
+
+    public void Emit(string Event)
+    {
+        Debug.Log("EMIT: " + Event);
+        EventManager.Emit(Event);
+    }
+
+
+    void Test()
+    {
+        Debug.Log("TESTILY TEST!");
+    }
+
 }
