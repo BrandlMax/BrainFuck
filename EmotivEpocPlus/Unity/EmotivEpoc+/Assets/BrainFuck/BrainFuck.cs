@@ -10,13 +10,21 @@ using System.Threading;
 public class BrainFuck 
 {
 
+    private string HEADSETNAME;
     public string CORTEX_URL = "wss://emotivcortex.com:54321";
     private WebSocket WS;
     private string TOKEN;
+    private string CLIENT_ID;
+    private string CLIENT_SECRET;
     private string SESSION = null;
     private Boolean READY = false;
+    private Boolean STREAMREADY = false;
 
-    private class BRAIN_CLASS
+    public BrainFuck(string HeadsetName){
+        this.HEADSETNAME = HeadsetName;
+    }
+
+    public class BRAIN_CLASS
     {
         public string command = null;
         public string eyeAction = null;
@@ -24,11 +32,14 @@ public class BrainFuck
         public string lowerFaceAction = null;
     }
 
-    private BRAIN_CLASS BRAIN = new BRAIN_CLASS();
+    public BRAIN_CLASS BRAIN = new BRAIN_CLASS();
 
     // WEBSOCKET
-    public void Connect()
+    public void Connect(string client_id, string client_secret)
     {
+
+        this.CLIENT_ID = client_id;
+        this.CLIENT_SECRET = client_secret;
 
         WS = new WebSocket(CORTEX_URL);
 
@@ -66,14 +77,14 @@ public class BrainFuck
         this.On("createdSession", () =>
         {
             Debug.Log("Session created");
-            this._subscribe();
+            this.Emit("Ready");
+            READY = true;
         });
 
         this.On("subscribed", () =>
         {
             Debug.Log("Subscribed");
-            this.Emit("Ready");
-            READY = true;
+            this.STREAMREADY = true;
         });
 
     }
@@ -81,6 +92,7 @@ public class BrainFuck
     private void _message(object sender, MessageEventArgs e)
     {
         Debug.Log("WebSocket server said: " + e.Data);
+
         RES_CLASS msg = JsonUtility.FromJson<RES_CLASS>(e.Data.ToString());
 
         if (msg.result._auth != null)
@@ -91,11 +103,33 @@ public class BrainFuck
 
         }
 
-        if (msg.result.appID != null)
+        if (msg.result.appId != null)
         {
             Debug.Log("Create Session");
             this.SESSION = msg.result.id;
             this.Emit("createdSession");
+        }
+
+        if (msg.com != null)
+        {
+            this.BRAIN.command = msg.com[0].ToString();
+            if (!this.STREAMREADY)
+            {
+                this.Emit("subscribed");
+            }
+
+        }
+
+        if (msg.fac != null)
+        {
+            this.BRAIN.eyeAction = msg.fac[0].ToString();
+            this.BRAIN.upperFaceAction = msg.fac[1].ToString();
+            this.BRAIN.lowerFaceAction = msg.fac[3].ToString();
+        }
+        
+        if (this.STREAMREADY || msg.fac != null || msg.com != null)
+        {
+            this.Emit("Stream");
         }
 
     }
@@ -114,27 +148,43 @@ public class BrainFuck
     // ACTION
     private void _authorize()
     {
-        string AuthReq = "{\"jsonrpc\": \"2.0\", \"method\": \"authorize\", \"params\": { }, \"id\": 1 }";
-        Debug.Log("AuthReq:" + AuthReq);
+        string AuthReq = "{\"jsonrpc\": \"2.0\", \"method\": \"authorize\", \"params\": {\"client_id\":\"" + CLIENT_ID + "\",\"client_secret\":\"" + CLIENT_SECRET + "\"}, \"id\": 1 }";
+        //Debug.Log("AuthReq:" + AuthReq);
         WS.Send(AuthReq);
     }
 
 
     private void _createSession()
     {
-        string CreateSessionReq = "{\"jsonrpc\": \"2.0\",\"method\": \"createSession\",\"params\": { \"_auth\":" + TOKEN + ",\"status\": \"open\"},\"id\": 1}";
-        Debug.Log("Created:" + CreateSessionReq);
+        string CreateSessionReq = "{\"jsonrpc\": \"2.0\",\"method\": \"createSession\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"status\": \"open\"},\"id\": 1}";
+        //Debug.Log("Created:" + CreateSessionReq);
         WS.Send(CreateSessionReq);
     }
 
 
     private void _subscribe()
     {
-        string SubscribeReq = "{\"jsonrpc\": \"2.0\",\"method\": \"subscribe\",\"params\": { \"_auth\":" + TOKEN + ",\"streams\": [\"com\",\"fac\",\"sys\"]},\"id\": 1}";
-        Debug.Log("Subscrs:" + SubscribeReq);
+        string SubscribeReq = "{\"jsonrpc\": \"2.0\",\"method\": \"subscribe\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"streams\": [\"com\",\"fac\",\"sys\"]},\"id\": 1}";
+        //Debug.Log("Subscrs:" + SubscribeReq);
         WS.Send(SubscribeReq);
     }
 
+    public void StartStream()
+    {
+        this._subscribe();
+    }
+
+    public void LoadProfile(string profile)
+    {
+        string loadProfileReq = "{\"jsonrpc\": \"2.0\",\"method\": \"setupProfile\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"headset\":\"" + HEADSETNAME+ "\",\"profile\":\"" + profile + "\",\"status\": \"load\"},\"id\": 1}";
+        WS.Send(loadProfileReq);
+    }
+
+    public void GetCurrentProfile(string profile)
+    {
+        string getCurrentProfileReq = "{\"jsonrpc\": \"2.0\",\"method\": \"getCurrentProfile\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"headset\":\"" + HEADSETNAME+ "\"},\"id\": 1}";
+        WS.Send(getCurrentProfileReq);
+    }
 
     // EVENT MANAGER
     public void On(string Event, UnityAction Callback)

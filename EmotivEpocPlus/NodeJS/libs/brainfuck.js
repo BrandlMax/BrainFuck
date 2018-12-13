@@ -17,14 +17,18 @@ const safeParse = msg => {
 
 // CLASS
 class BrainFuck extends EventEmitter {
-    constructor(){
+    constructor(headsetName){
 
         super();
+        this.HEADSETNAME = headsetName;
         this.CORTEX_URL = "wss://emotivcortex.com:54321";
         this.WS;
         this.TOKEN;
+        this.CLIENT_ID;
+        this.CLIENT_SECRET;
         this.SESSION = null;
         this.READY = false;
+        this.STREAMREADY = false;
 
         this.CURTRAINING = null;
 
@@ -49,13 +53,13 @@ class BrainFuck extends EventEmitter {
 
         this.on('createdSession', () => {
             console.log('Session created');
-            this._subscribe();
+            this.emit('Ready');
+            this.READY = true;
         })
 
         this.on('subscribed', ()=>{
             console.log('Subscribed');
-            this.emit('Ready');
-            this.READY = true;
+            this.STREAMREADY = true;
         })
 
         // Training
@@ -70,15 +74,19 @@ class BrainFuck extends EventEmitter {
     }
 
     // SETUP
-    async Connect(){
+    async Connect(client_id, client_secret){
+
+        this.CLIENT_ID = client_id;
+        this.CLIENT_SECRET = client_secret;
+        
         this.WS = new WebSocket(this.CORTEX_URL);
         this.WS.addEventListener("open", this._open.bind(this));
         this.WS.addEventListener("message", this._message.bind(this));
     }
 
     _open(e){
-        console.log('open', e);
-
+        // console.log('open', e);
+        
         if(this.TOKEN == null){
             this._authorize();
         }
@@ -107,7 +115,7 @@ class BrainFuck extends EventEmitter {
             if (msg['com'] !== undefined){
                 // console.log('com', msg.com)
                 this.BRAIN.command = msg.com[0]
-                if(!this.READY){
+                if(!this.STREAMREADY){
                     this.emit('subscribed');
                 }
             }
@@ -135,7 +143,9 @@ class BrainFuck extends EventEmitter {
 
         }
         
-        this.emit('Stream', this.BRAIN);
+        if(this.STREAMREADY){
+            this.emit('Stream', this.BRAIN);
+        }
     }
 
     // ACTIONS
@@ -143,7 +153,10 @@ class BrainFuck extends EventEmitter {
         let AuthReq = {
             "jsonrpc": "2.0",
             "method": "authorize",
-            "params": {},
+            "params": {
+                "client_id": this.CLIENT_ID,
+                "client_secret": this.CLIENT_SECRET
+            },
             "id": 1
         }
         this.WS.send(JSON.stringify(AuthReq));
@@ -156,8 +169,8 @@ class BrainFuck extends EventEmitter {
             "jsonrpc": "2.0",
             "method": "createSession",
             "params": {
-            "_auth": this.TOKEN,
-            "status": "open"
+                "_auth": this.TOKEN,
+                "status": "open"
             },
             "id": 1
         }
@@ -182,7 +195,41 @@ class BrainFuck extends EventEmitter {
         this.WS.send(JSON.stringify(SubscribeReq));
     }
 
-    // Training
+    // Start Stream
+    startStream(){
+        this._subscribe();
+    }
+    
+    // Load Profile
+    loadProfile(profile) {
+        let loadProfileReq = {
+            "jsonrpc": "2.0",
+            "method": "setupProfile",
+            "params": {
+                "_auth": this.TOKEN,
+                "headset": this.HEADSETNAME,
+                "profile": profile,
+                "status": "load"
+            },
+            "id": 1
+        }
+        this.WS.send(JSON.stringify(loadProfileReq))
+    }
+
+    getCurrentProfile(){
+        let getCurrentProfileReq = {
+            "jsonrpc": "2.0",
+            "method": "getCurrentProfile",
+            "params": {
+              "_auth": this.TOKEN,
+              "headset": this.HEADSETNAME,
+            },
+            "id": 1
+        }
+        this.WS.send(JSON.stringify(getCurrentProfileReq))
+    }
+
+    // Todo: Training
     _training(action, status){
         this.CURTRAINING = action;
 

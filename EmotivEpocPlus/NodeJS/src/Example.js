@@ -1,18 +1,25 @@
 const BrainFuck = require("../libs/brainfuck");
 
-const EPOC = new BrainFuck();
+const EPOC = new BrainFuck('INSERT_YOUR_HEADSET_ID');
 
-EPOC.Connect();
+let client_id = 'INSERT_YOUR_CLIENT_ID';
+let client_secret = 'INSERT_YOUR_CLIENT_SECRET';
 
-// DATA Stream
-EPOC.on('Stream', (data) =>{
-    // console.log(`command: ${ data.command } | eyeAction: ${ data.eyeAction } | upperFaceAction: ${ data.upperFaceAction } | lowerFaceAction: ${ data.lowerFaceAction } `)
-})
+// 01. CONNECT
+EPOC.Connect(client_id, client_secret);
 
-// INITIALIZE
+// 02. INITIALIZE
 EPOC.on('Ready', () => {
-    EPOC.startTraining('neutral');
+    console.log('READY!');
+    EPOC.loadProfile('Max01');
+    EPOC.startStream();
 });
+
+// 03. DATA STREAM
+EPOC.on('Stream', (data) =>{
+    // DO THINGS WITH COMMANDS AND FACE-ACTIONS...
+    console.log(`command: ${ data.command } | eyeAction: ${ data.eyeAction } | upperFaceAction: ${ data.upperFaceAction } | lowerFaceAction: ${ data.lowerFaceAction } `)
+})
 
 
 

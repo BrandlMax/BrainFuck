@@ -10,13 +10,17 @@ public class RES_CLASS
     public RESULT_CLASS result;
     public RESULT_CLASS undefClass;
     public string undef;
+    public string[] com;
+    public string[] fac;
+    public string sid;
+    public string time;
 }
 
 [System.Serializable]
 public class RESULT_CLASS
 {
     public string _auth;
-    public string appID;
+    public string appId;
     public string id;
 }
 
