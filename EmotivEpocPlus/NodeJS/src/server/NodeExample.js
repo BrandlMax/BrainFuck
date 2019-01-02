@@ -1,4 +1,4 @@
-const BrainFuck = require("../libs/brainfuck");
+const BrainFuck = require("../../libs/brainfuck");
 
 const EPOC = new BrainFuck('INSERT_YOUR_HEADSET_ID');
 
