@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 
 
-public class Example : MonoBehaviour
+public class EmptyExample : MonoBehaviour
 {
 
     public BrainFuck EPOC;
@@ -14,12 +14,15 @@ public class Example : MonoBehaviour
     void Start()
     {
         // 01. CONNECT
-        EPOC = new BrainFuck("INSERT_YOUR_HEADSET_ID");
+
+        // e.g. EPOCPLUS-0000000
+        EPOC = new BrainFuck("INSERT_YOUR_HEADSET_ID"); 
 
         string client_id = "INSERT_YOUR_CLIENT_ID";
         string client_secret = "INSERT_YOUR_CLIENT_SECRET";
         EPOC.Connect(client_id, client_secret);
 
+        // SETUP EVENTS
         EPOC.On("Ready", Ready);
         EPOC.On("Stream", Stream);
     }
@@ -28,8 +31,12 @@ public class Example : MonoBehaviour
     void Ready()
     {
         Debug.Log("EPOC Ready!");
-        EPOC.LoadProfile("Max01");
-        // EPOC.StartStream();
+
+        // LOAD PRETRAINED PROFILE
+        EPOC.LoadProfile("INSERT_YOUR_PROFILE_NAME");
+
+        // START LOGGING
+        EPOC.StartStream();
     }
 
     // 03. DATA STREAM
@@ -43,11 +50,6 @@ public class Example : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        if (Input.GetKeyDown("q"))
-        {
-            EPOC.Emit("test");
-        }
 
     }
 

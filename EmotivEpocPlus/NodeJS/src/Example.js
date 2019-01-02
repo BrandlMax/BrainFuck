@@ -11,7 +11,7 @@ EPOC.Connect(client_id, client_secret);
 // 02. INITIALIZE
 EPOC.on('Ready', () => {
     console.log('READY!');
-    EPOC.loadProfile('Max01');
+    EPOC.loadProfile('INSERT_YOUR_PROFILE_NAME');
     EPOC.startStream();
 });
 
