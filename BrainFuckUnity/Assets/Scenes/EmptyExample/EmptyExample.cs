@@ -18,6 +18,7 @@ public class EmptyExample : MonoBehaviour
         // e.g. EPOCPLUS-0000000
         EPOC = new BrainFuck("INSERT_YOUR_HEADSET_ID"); 
 
+        // FROM YOUR EMOTIV ACCOUNT
         string client_id = "INSERT_YOUR_CLIENT_ID";
         string client_secret = "INSERT_YOUR_CLIENT_SECRET";
         EPOC.Connect(client_id, client_secret);
@@ -26,7 +27,7 @@ public class EmptyExample : MonoBehaviour
         EPOC.On("Ready", Ready);
         EPOC.On("Stream", Stream);
     }
-	
+
     // 02. INITIALIZE
     void Ready()
     {
