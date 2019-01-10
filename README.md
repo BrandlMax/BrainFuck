@@ -251,4 +251,158 @@ But you have to train a profile with the EmotivBCI App that can recognize Push, 
     }
 ```
 
+## BrainfuckJS
+This version of Brainfuck runs with NodeJS.
+
+### Setup Environment
+
+Just import the ```brainfuck.js``` from the ```libs``` folder.
+
+```javascript
+const BrainFuck = require("path/to/libs/brainfuck");
+```
+
+Brainfuck needs ```ws``` (MIT LICENSE) for the websocket:<br />
+https://github.com/websockets/ws
+
+```
+npm install --save ws
+```
+
+If you take the folder from this repository, you can also simply use npm or Yarn to get all dependencies.
+
+Ppm:
+```
+npm install
+```
+
+YARN:
+```
+yarn install
+```
+
+And to run, for example::
+```
+node src/server/NodeExample.js  
+```
+
+
+### Basic Example
+```javascript
+const BrainFuck = require("../../libs/brainfuck");
+
+const EPOC = new BrainFuck('INSERT_YOUR_HEADSET_ID');
+
+let client_id = 'INSERT_YOUR_CLIENT_ID';
+let client_secret = 'INSERT_YOUR_CLIENT_SECRET';
+
+// 01. CONNECT
+EPOC.Connect(client_id, client_secret);
+
+// 02. INITIALIZE
+EPOC.on('Ready', () => {
+    console.log('READY!');
+    EPOC.loadProfile('INSERT_YOUR_PROFILE_NAME');
+    EPOC.startStream();
+});
+
+// 03. DATA STREAM
+EPOC.on('Stream', (data) =>{
+    // DO THINGS WITH COMMANDS AND FACE-ACTIONS...
+    console.log(`command: ${ data.command } | eyeAction: ${ data.eyeAction } | upperFaceAction: ${ data.upperFaceAction } | lowerFaceAction: ${ data.lowerFaceAction } `)
+})
+```
+
+Similar to the Unity version, we build a connection to the CortexAPI with our Headset-ID and our data from the registered emotive application. More infos under the point ````Required Informations````
+
+```javascript
+const EPOC = new BrainFuck('INSERT_YOUR_HEADSET_ID');
+
+let client_id = 'INSERT_YOUR_CLIENT_ID';
+let client_secret = 'INSERT_YOUR_CLIENT_SECRET';
+
+// 01. CONNECT
+EPOC.Connect(client_id, client_secret);
+```
+
+### EPOC.on('Ready', callback)
+The callback is executed when the connection is established and everything is ready for the API commands. 
+### EPOC.on('Stream', callback(data))
+ The callback is executed every time we get new data from the headset, after calling the ```EPOC.startStream()``` in the Ready callback. We get a parameter in this callback that contains the current states.
+ 
+ ```javascript
+data.command
+data.eyeAction
+data.upperFaceAction
+data.lowerFaceAction
+ ```
+
+### Load pretrained Profile
+
+See ```Load pretrained Profile``` on the ```Brainfuck Unity``` Section 
+
+```javascript
+EPOC.loadProfile('INSERT_YOUR_PROFILE_NAME');
+```
+
+### Socket
+If you want to use this information outside the NodeJS server, such as a website or app, you can simply use Brainfuck together with Socket.io.
+
+``` javascript
+const BrainFuck = require("../../libs/brainfuck");
+const app = require('express')();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+
+server.listen(80);
+
+const EPOC = new BrainFuck('INSERT_YOUR_HEADSET_ID');
+
+let client_id = 'INSERT_YOUR_CLIENT_ID';
+let client_secret = 'INSERT_YOUR_CLIENT_SECRET';
+
+// 01. CONNECT
+EPOC.Connect(client_id, client_secret);
+
+// 02. INITIALIZE
+EPOC.on('Ready', () => {
+    console.log('READY!');
+    EPOC.loadProfile('INSERT_YOUR_PROFILE_NAME');
+    EPOC.startStream();
+});
+
+// 03. DATA STREAM
+EPOC.on('Stream', (data) =>{
+
+    // DO THINGS WITH COMMANDS AND FACE-ACTIONS...
+    console.log(`command: ${ data.command } | eyeAction: ${ data.eyeAction } | upperFaceAction: ${ data.upperFaceAction } | lowerFaceAction: ${ data.lowerFaceAction } `)
+    
+    // Send to Socket
+    io.emit('BRAINSTREAM', data);
+})
+
+io.on('connection', function(socket){
+    console.log('a user connected');
+});
+  
+```
+
+In the website/app you can then simply receive and use the data:
+```
+let BRAIN;
+socket.on('BRAINSTREAM', (data) => {
+    BRAIN = data;
+})
+```
+
+You can find an example under ```src/examples```. Here you can control a small red ball with thoughts in a website. But you have to train a profile with the EmotivBCI App that can recognize Push, Pull, Left and Right.
+
+# Todos
+- [ ] Clean up and adjust code
+- [ ] Start In-Application Training with Brainfuck
+- [ ] More Examples
+
+I accept pull requests ;)
+
+
 
