@@ -1,6 +1,13 @@
 # BrainFuck 🧠
 BrainFuck is a small framework to quickly and easily write small BCI prototypes for the Emotiv EPOC+.
 
+I created this framework as part of a free elective with Prof. Dr.-Ing. Martin Leissler in order to make it easier for future students to get started with BCI using the Emotiv EPOC.
+
+This framework allows easy communication with the CortexAPI:<br />
+[https://emotiv.github.io/cortex-docs/#introduction](https://emotiv.github.io/cortex-docs/#introduction)
+
+The framework is available in a NodeJS and a Unity version.
+
 # Emotive EPOC+
 
 ## Setup
@@ -82,11 +89,166 @@ Extract from Tips and Tricks: <br />
 
 Each of us trains differently, so it's important to find out which strategy works best for you. This will take some time and should not be underestimated. And yet, after some training, the results are magical.
 
-# Brainfuck
-I created this framework as part of a free elective with Prof. Dr.-Ing. Martin Leissler in order to make it easier for future students to get started with BCI using the Emotiv EPOC.
+# Brainfuck Framework
+## Setup
 
-This framework allows easy communication with the CortexAPI:<br />
-[https://emotiv.github.io/cortex-docs/#introduction](https://emotiv.github.io/cortex-docs/#introduction)
+1. Download the Code and Examples from the Git Repository: <br />
+[https://github.com/BrandlMax/BrainFuck](https://github.com/BrandlMax/BrainFuck)
 
-The framework is available in a NodeJS and a Unity version.
+2. Open Emotive CortexUI App and connect the prepared headset. The device is then ready to communicate with Brainfuck via CortexAPI.
+
+### Required Informations
+To establish a connection we need the Headset-ID. We find this under Devices in our EmotivBCI or CortexUI App. Looks like this: ````EPOCPLUS-1A2BCD34```.
+
+And we have to register a Cortex-App which is very easy on this site: <br />
+https://www.emotiv.com/my-account/cortex-apps/
+
+Now you have your ```client_id``` and your ```client_secret```.
+
+Note: Make a good note of the client-secret, because it cannot be displayed again ;)
+
+## Brainfuck Unity
+
+### Setup Environment
+
+The ```BrainFuckUnity``` Folder contains an example Unity project with 2 scenes.
+
+In the project the ```BrainFuck``` folder is needed, here is the framework. You can also simply add it to existing projects.  In the scene itself an object with the logic is needed. In the examples this is an Empty where the logic script AND the event manager script are added as components.
+
+The BrainFuck folder also contains Websocket-Sharp (MIT LICENSE), which we use to communicate with CortexAPI.
+<br /> https://github.com/sta/websocket-sharp 
+
+### Basic Example
+```csharp
+public class EmptyExample : MonoBehaviour
+{
+
+    public BrainFuck EPOC;
+
+    // Use this for initialization
+    void Start()
+    {
+        // 01. CONNECT
+
+        // e.g. EPOCPLUS-0000000
+        EPOC = new BrainFuck("INSERT_YOUR_HEADSET_ID"); 
+
+        // FROM YOUR EMOTIV ACCOUNT
+        string client_id = "INSERT_YOUR_CLIENT_ID";
+        string client_secret = "INSERT_YOUR_CLIENT_SECRET";
+        EPOC.Connect(client_id, client_secret);
+
+        // SETUP EVENTS
+        EPOC.On("Ready", Ready);
+        EPOC.On("Stream", Stream);
+    }
+
+    // 02. INITIALIZE
+    void Ready()
+    {
+        Debug.Log("EPOC Ready!");
+
+        // LOAD PRETRAINED PROFILE
+        EPOC.LoadProfile("INSERT_YOUR_PROFILE_NAME");
+
+        // START LOGGING
+        EPOC.StartStream();
+    }
+
+    // 03. DATA STREAM
+    void Stream()
+    {
+        // DO THINGS WITH COMMANDS AND FACE-ACTIONS...
+        Debug.Log($"command: { EPOC.BRAIN.command } | eyeAction: { EPOC.BRAIN.eyeAction } | upperFaceAction: { EPOC.BRAIN.upperFaceAction } | lowerFaceAction: { EPOC.BRAIN.lowerFaceAction }");
+    }
+
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
+
+```
+
+Above we can see an example code. This can also be used as basic logic.
+
+First we establish a connection to CortexAPI. For this we need the headset ID and a registered emotive application. More infos under the point ````Required Informations````
+
+```csharp
+        // e.g. EPOCPLUS-0000000
+        EPOC = new BrainFuck("INSERT_YOUR_HEADSET_ID"); 
+
+        // FROM YOUR EMOTIV ACCOUNT
+        string client_id = "INSERT_YOUR_CLIENT_ID";
+        string client_secret = "INSERT_YOUR_CLIENT_SECRET";
+        EPOC.Connect(client_id, client_secret);
+```
+
+Then we register 2 events:
+
+ ```csharp
+         // SETUP EVENTS
+        EPOC.On("Ready", Ready);
+        EPOC.On("Stream", Stream);
+ ```
+
+### Ready()
+```Ready()``` is executed when the connection is established and everything is ready for the API commands. <br />
+
+### Stream()
+```Stream()``` is executed every time we get new data from the headset, after calling the ```EPOC.StartStream()``` in ```Ready()```. 
+
+### EPOC.BRAIN
+After the stream has been started the current states are available in the ```EPOC.BRAIN``` object
+
+```
+EPOC.BRAIN.command
+EPOC.BRAIN.eyeAction 
+EPOC.BRAIN.upperFaceAction
+EPOC.BRAIN.lowerFaceAction
+```
+
+### Load pretrained Profile
+
+Within the ```Ready()``` we can now load a profile trained by us in the EmotivBCI app.
+
+```csharp
+EPOC.LoadProfile("INSERT_YOUR_PROFILE_NAME");
+```
+
+If we then start the stream ```EPOC.StartStream()```, the commands in ```EPOC.BRAIN``` should already react to our profile.
+
+### Ball Example
+In the Ball Example Scene we use commands to move a ball with the power of our thoughts in 3D space ;)
+But you have to train a profile with the EmotivBCI App that can recognize Push, Pull, Left and Right.
+
+```csharp
+    void FixedUpdate()
+    {
+
+        Vector3 movement = new Vector3(0.0f, 0.0f, 0.0f);
+
+        if (EPOC.BRAIN.command == "push")
+        {
+            movement = new Vector3(0.0f, 0.0f, 1.0f);
+        }
+        if (EPOC.BRAIN.command == "pull")
+        {
+            movement = new Vector3(0.0f, 0.0f, -1.0f);
+        }
+        if (EPOC.BRAIN.command == "left")
+        {
+            movement = new Vector3(-1.0f, 0.0f, 0.0f);
+        }
+        if (EPOC.BRAIN.command == "right")
+        {
+            movement = new Vector3(1.0f, 0.0f, 0.0f);
+        }
+
+
+        Ball.AddForce(movement);
+    }
+```
+
 
