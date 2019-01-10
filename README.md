@@ -69,8 +69,6 @@ and behind your ears) for about 20 seconds
 Extract from EMOTIV EPOC AND EPOC+ Quick Start Guide:<br />
 [https://www.emotiv.com/files/Emotiv-Epoc-Quick-Start-Guide-2015.pdf](https://www.emotiv.com/files/Emotiv-Epoc-Quick-Start-Guide-2015.pdf)
 
-[!!!!IMAGE OF QUALITY!!!!]
-
 In the Emotive BCI and the Emotive CortexUI App you can check the connection quality. This should always be 100% for successful training results.
 
 
@@ -271,12 +269,12 @@ npm install --save ws
 
 If you take the folder from this repository, you can also simply use npm or Yarn to get all dependencies.
 
-Ppm:
+npm:
 ```
 npm install
 ```
 
-YARN:
+yarn:
 ```
 yarn install
 ```
@@ -388,7 +386,7 @@ io.on('connection', function(socket){
 ```
 
 In the website/app you can then simply receive and use the data:
-```
+```javascript
 let BRAIN;
 socket.on('BRAINSTREAM', (data) => {
     BRAIN = data;
