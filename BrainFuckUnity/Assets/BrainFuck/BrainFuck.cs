@@ -13,12 +13,14 @@ public class BrainFuck
     private string HEADSETNAME;
     public string CORTEX_URL = "wss://emotivcortex.com:54321";
     private WebSocket WS;
-    private string TOKEN;
+    public string TOKEN;
     private string CLIENT_ID;
     private string CLIENT_SECRET;
-    private string SESSION = null;
+    public string SESSION = null;
     private Boolean READY = false;
     private Boolean STREAMREADY = false;
+    public string CURPROFILE = null;
+    public string CURTRAINING = null;
 
     public BrainFuck(string HeadsetName){
         this.HEADSETNAME = HeadsetName;
@@ -87,11 +89,29 @@ public class BrainFuck
             this.STREAMREADY = true;
         });
 
+        // Training
+        this.On("trainingStarted", () =>
+        {
+            Debug.Log($"Training {this.CURTRAINING } Started.");
+        });
+
+        this.On("trainingSucceeded", () =>
+        {
+            Debug.Log($"Training {this.CURTRAINING } Succeeded.");
+            this._training(this.CURTRAINING, "accept");
+        });
+
+        this.On("trainingCompleted", () =>
+        {
+            Debug.Log($"Training {this.CURTRAINING } Completed.");
+            this.SaveProfile(this.CURPROFILE);
+        });
+
     }
 
     private void _message(object sender, MessageEventArgs e)
     {
-        Debug.Log("WebSocket server said: " + e.Data);
+        // Debug.Log("WebSocket server said: " + e.Data);
 
         RES_CLASS msg = JsonUtility.FromJson<RES_CLASS>(e.Data.ToString());
 
@@ -126,7 +146,29 @@ public class BrainFuck
             this.BRAIN.upperFaceAction = msg.fac[1].ToString();
             this.BRAIN.lowerFaceAction = msg.fac[3].ToString();
         }
-        
+
+
+        if (msg.sys != null)
+        {
+            Debug.Log(msg);
+            if (msg.sys[1] == "MC_Started")
+            {
+                this.Emit("trainingStarted");
+            } 
+            else if (msg.sys[1] == "MC_Succeeded")
+            {
+                this.Emit("trainingSucceeded");
+            }
+            else if (msg.sys[1] == "MC_Completed")
+            {
+                this.Emit("trainingCompleted");
+            }
+            else
+            {
+                Debug.Log($"TrainingsMessage: { msg }");
+            }
+        }
+
         if (this.STREAMREADY || msg.fac != null || msg.com != null)
         {
             this.Emit("Stream");
@@ -176,8 +218,23 @@ public class BrainFuck
 
     public void LoadProfile(string profile)
     {
+        this.CURPROFILE = profile;
         string loadProfileReq = "{\"jsonrpc\": \"2.0\",\"method\": \"setupProfile\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"headset\":\"" + HEADSETNAME+ "\",\"profile\":\"" + profile + "\",\"status\": \"load\"},\"id\": 1}";
         WS.Send(loadProfileReq);
+    }
+
+    public void CreateProfile(string profile)
+    {
+        this.CURPROFILE = profile;
+        string createProfileReq = "{\"jsonrpc\": \"2.0\",\"method\": \"setupProfile\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"headset\":\"" + HEADSETNAME + "\",\"profile\":\"" + profile + "\",\"status\": \"create\"},\"id\": 1}";
+        WS.Send(createProfileReq);
+    }
+
+    public void SaveProfile(string profile)
+    {
+        this.CURPROFILE = profile;
+        string saveProfileReq = "{\"jsonrpc\": \"2.0\",\"method\": \"setupProfile\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"headset\":\"" + HEADSETNAME + "\",\"profile\":\"" + profile + "\",\"status\": \"save\"},\"id\": 1}";
+        WS.Send(saveProfileReq);
     }
 
     public void GetCurrentProfile(string profile)
@@ -185,6 +242,27 @@ public class BrainFuck
         string getCurrentProfileReq = "{\"jsonrpc\": \"2.0\",\"method\": \"getCurrentProfile\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"headset\":\"" + HEADSETNAME+ "\"},\"id\": 1}";
         WS.Send(getCurrentProfileReq);
     }
+
+    // TRAINING
+
+    private void _training(string action, string status)
+    {
+        this.CURTRAINING = action;
+        string trainingReq = "{\"jsonrpc\": \"2.0\",\"method\": \"training\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"detection\":\"mentalCommand\",\"session\":\"" + SESSION + "\",\"action\":\"" + action + "\",\"status\":\"" + status + "\"},\"id\": 1}";
+        WS.Send(trainingReq);
+    }
+
+    public void StartTraining(string action)
+    {
+        this._training(action, "start");
+    }
+
+    // WILDCARD
+    public void ToCortexAPI(string jsonString)
+    {
+        WS.Send(jsonString);
+    }
+
 
     // EVENT MANAGER
     public void On(string Event, UnityAction Callback)
@@ -195,7 +273,7 @@ public class BrainFuck
 
     public void Emit(string Event)
     {
-        Debug.Log("EMIT: " + Event);
+        // Debug.Log("EMIT: " + Event);
         EventManager.Emit(Event);
     }
 

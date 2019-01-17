@@ -75,7 +75,7 @@ class BrainFuck extends EventEmitter {
         this.on('trainingCompleted', () => {
             console.log(`Training ${this.CURTRAINING } Completed.`)
             this.saveProfile(this.CURPROFILE)
-        });å
+        });
 
     }
 

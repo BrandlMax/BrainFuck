@@ -12,6 +12,7 @@ public class RES_CLASS
     public string undef;
     public string[] com;
     public string[] fac;
+    public string[] sys;
     public string sid;
     public string time;
 }
