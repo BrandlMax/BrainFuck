@@ -217,6 +217,84 @@ EPOC.LoadProfile("INSERT_YOUR_PROFILE_NAME");
 
 If we then start the stream ```EPOC.StartStream()```, the commands in ```EPOC.BRAIN``` should already react to our profile.
 
+### Training
+To start a training with Brainfuck Unity you must first have a profile loaded ```EPOC.LoadProfile("YourProfileName"); ``` or created ```EPOC.CreateProfile("YourProfileName"); ```.
+
+Then you can start a training process with one of the commands provided by Emotive:
+```csharp
+"neutral"
+"push"
+"pull"
+"lift"
+"drop"
+"left"
+"right"
+"rotateLeft"
+"rotateRight"
+"rotateClockwise"
+"rotateCounterClockwise"
+"rotateForwards"
+"rotateReverse"
+"disappear"
+```
+
+```csharp
+EPOC.StartTraining("pull");
+```
+
+After that an 8 second training is started. To watch the training events you have to activate the following event listeners in ```start()```:
+```csharp
+
+		setup(){
+            ...
+
+            // SETUP EVENTS
+            EPOC.On("Ready", Ready);
+            EPOC.On("Stream", Stream);  
+
+            EPOC.On("trainingStarted", TrainingStarted);
+            EPOC.On("trainingSucceeded", TrainingsSucceeded);
+            EPOC.On("trainingCompleted", TrainingCompleted);
+        }
+        
+        ...
+        
+        void TrainingStarted(){
+		    
+		    }
+		    
+		void TrainingsSucceeded(){
+		    
+		    }
+		    
+	    void TrainingCompleted(){
+		    
+		    }
+		     
+ 
+```
+
+The results and steps are also displayed in the console. With the EmotivBCI app you can view your profile, your training will be registered here as well.
+
+### Wildcard
+
+There are countless other API commands of the Cortex API: <br />
+[https://emotiv.github.io/cortex-docs/#introduction](https://emotiv.github.io/cortex-docs/#introduction)
+To be able to use them with Brainfuck Unity, although they are not yet implemented, there is a function with which you can make Api calls.
+```csharp
+ EPOC.ToCortexAPI(json)
+```
+
+A training would look like this:
+```csharp
+String YourRequest = "{\"jsonrpc\": \"2.0\",\"method\": \"training\",\"params\": { \"_auth\":\"" + TOKEN + "\",\"detection\":\"mentalCommand\",\"session\":\"" + SESSION + "\",\"action\":\"" + action + "\",\"status\":\"" + status + "\"},\"id\": 1}
+
+EPOC.ToCortexAPI(YourRequest);
+
+```
+
+Here, too, I would be happy if volunteers would continue to work on the project and implement additional functions ❤️
+
 ### Ball Example
 In the Ball Example Scene we use commands to move a ball with the power of our thoughts in 3D space ;)
 But you have to train a profile with the EmotivBCI App that can recognize Push, Pull, Left and Right.
@@ -342,6 +420,81 @@ See ```Load pretrained Profile``` on the ```Brainfuck Unity``` Section
 ```javascript
 EPOC.loadProfile('INSERT_YOUR_PROFILE_NAME');
 ```
+
+### Training
+
+To start a training with Brainfuck JS you must first have a profile loaded ```EPOC.loadProfile('YourProfileName'); ``` or created ```EPOC.createProfile('YourProfileName'); ```.
+
+Then you can start a training process with one of the commands provided by Emotive:
+```javascript
+"neutral"
+"push"
+"pull"
+"lift"
+"drop"
+"left"
+"right"
+"rotateLeft"
+"rotateRight"
+"rotateClockwise"
+"rotateCounterClockwise"
+"rotateForwards"
+"rotateReverse"
+"disappear"
+```
+
+```javascript
+EPOC.startTraining('push')
+```
+
+After that an 8 second training is started. You can watch the training with the following events:
+```javascript
+EPOC.on('trainingStarted', () => {
+	// Your Code
+})
+
+EPOC.on('trainingSucceeded', () => {
+	// Your Code
+})
+
+EPOC.on('trainingCompleted', () => {
+	// Your Code
+})
+
+```
+
+The results and steps are also displayed in the console. With the EmotivBCI app you can view your profile, your training will be registered here as well.
+
+### Wildcard
+
+There are countless other API commands of the Cortex API: <br />
+[https://emotiv.github.io/cortex-docs/#introduction](https://emotiv.github.io/cortex-docs/#introduction)
+To be able to use them with Brainfuck, although they are not yet implemented, there is a function with which you can make Api calls.
+
+```javascript
+ EPOC.toCortexAPI(json)
+```
+
+A training would look like this:
+```javascript
+let YourRequest = {
+    "jsonrpc": "2.0",
+    "method": "training",
+    "params": {
+        "_auth": EPOC.TOKEN,
+        "detection": "mentalCommand",
+        "session": EPOC.SESSION,
+        "action": "push",
+        "status": "start"
+    },
+    "id": 1
+}
+
+EPOC.toCortexAPI(YourRequest);
+
+```
+
+Here, too, I would be happy if volunteers would continue to work on the project and implement additional functions ❤️
 
 ### Socket
 If you want to use this information outside the NodeJS server, such as a website or app, you can simply use Brainfuck together with Socket.io.
