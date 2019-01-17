@@ -245,31 +245,32 @@ EPOC.StartTraining("pull");
 After that an 8 second training is started. To watch the training events you have to activate the following event listeners in ```start()```:
 ```csharp
 
-		setup(){
-            ...
+setup(){
 
-            // SETUP EVENTS
-            EPOC.On("Ready", Ready);
-            EPOC.On("Stream", Stream);  
+    ...
 
-            EPOC.On("trainingStarted", TrainingStarted);
-            EPOC.On("trainingSucceeded", TrainingsSucceeded);
-            EPOC.On("trainingCompleted", TrainingCompleted);
-        }
+    // SETUP EVENTS
+    EPOC.On("Ready", Ready);
+    EPOC.On("Stream", Stream);
+
+    EPOC.On("trainingStarted", TrainingStarted);
+    EPOC.On("trainingSucceeded", TrainingsSucceeded);
+    EPOC.On("trainingCompleted", TrainingCompleted);
+}
         
         ...
-        
-        void TrainingStarted(){
-		    
-		    }
-		    
-		void TrainingsSucceeded(){
-		    
-		    }
-		    
-	    void TrainingCompleted(){
-		    
-		    }
+
+void TrainingStarted(){
+
+}
+
+void TrainingsSucceeded(){
+
+}
+
+void TrainingCompleted(){
+
+}
 		     
  
 ```
