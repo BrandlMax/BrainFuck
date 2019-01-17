@@ -30,6 +30,7 @@ class BrainFuck extends EventEmitter {
         this.READY = false;
         this.STREAMREADY = false;
 
+        this.CURPROFILE = null
         this.CURTRAINING = null;
 
         this.BRAIN = {
@@ -63,13 +64,18 @@ class BrainFuck extends EventEmitter {
         })
 
         // Training
-        this.on('trainingSuccess', () => {
+        this.on('trainingStarted', () => {
+            console.log(`Training ${this.CURTRAINING } Started.`)
+        });
+
+        this.on('trainingSucceeded', () => {
             this._training(this.CURTRAINING, 'accept')
         });
 
-        this.on('trainingFailed', () => {
-            console.log(`Training ${this.CURTRAINING } Failed.`)
-        });
+        this.on('trainingCompleted', () => {
+            console.log(`Training ${this.CURTRAINING } Completed.`)
+            this.saveProfile(this.CURPROFILE)
+        });å
 
     }
 
@@ -130,10 +136,14 @@ class BrainFuck extends EventEmitter {
             if (msg['sys'] !== undefined){
                 console.log(msg)
                 // console.log('com', msg.com)
-                if (msg['sys'][1] == 'MC_Completed'){
-                    this.emit('trainingSuccess');
+                if (msg['sys'][1] == 'MC_Started'){
+                    this.emit('trainingStarted');
+                } else if(msg['sys'][1] == 'MC_Succeeded') {
+                    this.emit('trainingSucceeded');
+                } else if(msg['sys'][1] == 'MC_Completed'){
+                    this.emit('trainingCompleted');
                 } else {
-                    this.emit('trainingFailed');
+                    console.log('trainingsMessage', msg)
                 }
             }
 
@@ -202,6 +212,7 @@ class BrainFuck extends EventEmitter {
     
     // Load Profile
     loadProfile(profile) {
+        this.CURPROFILE = profile;
         let loadProfileReq = {
             "jsonrpc": "2.0",
             "method": "setupProfile",
@@ -214,6 +225,38 @@ class BrainFuck extends EventEmitter {
             "id": 1
         }
         this.WS.send(JSON.stringify(loadProfileReq))
+    }
+
+    createProfile(profile) {
+        this.CURPROFILE = profile;
+        let createProfileReq = {
+            "jsonrpc": "2.0",
+            "method": "setupProfile",
+            "params": {
+                "_auth": this.TOKEN,
+                "headset": this.HEADSETNAME,
+                "profile": profile,
+                "status": "create"
+            },
+            "id": 1
+        }
+        this.WS.send(JSON.stringify(createProfileReq))
+    }
+
+    saveProfile(profile) {
+        this.CURPROFILE = profile;
+        let saveProfileReq = {
+            "jsonrpc": "2.0",
+            "method": "setupProfile",
+            "params": {
+                "_auth": this.TOKEN,
+                "headset": this.HEADSETNAME,
+                "profile": profile,
+                "status": "save"
+            },
+            "id": 1
+        }
+        this.WS.send(JSON.stringify(saveProfileReq))
     }
 
     getCurrentProfile(){
@@ -250,6 +293,11 @@ class BrainFuck extends EventEmitter {
 
     startTraining(action){
         this._training(action, 'start');
+    }
+
+    // Wildcard
+    toCortexAPI(json){
+        this.WS.send(JSON.stringify(json));
     }
 }
 
