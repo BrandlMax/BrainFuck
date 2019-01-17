@@ -551,7 +551,7 @@ You can find an example under ```src/examples```. Here you can control a small r
 
 # Todos
 - [ ] Clean up and adjust code
-- [ ] Start In-Application Training with Brainfuck
+- [X] Start In-Application Training with Brainfuck
 - [ ] More Examples
 
 I accept pull requests ;)
