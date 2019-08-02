@@ -1,4 +1,7 @@
 # BrainFuck 🧠
+
+(For Cortex version 2.0: https://github.com/BrandlMax/BrainFramework)
+
 BrainFuck is a small framework to quickly and easily write small BCI prototypes for the Emotiv EPOC+.
 
 I created this framework as part of a free elective with Prof. Dr.-Ing. Martin Leissler in order to make it easier for future students to get started with BCI using the Emotiv EPOC.
